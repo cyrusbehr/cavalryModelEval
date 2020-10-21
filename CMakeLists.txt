@@ -9,5 +9,5 @@ include_directories(/home/cyrus/work/c-sdks/sample_code/trueface_sdk)
 link_directories(/home/cyrus/work/c-sdks/sample_code/trueface_sdk)
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(cavalryModelEvaluation main.cpp)
-target_link_libraries(cavalryModelEvaluation tf ${OpenCV_LIBS})
+add_executable(eval_sdk eval_sdk.cpp)
+target_link_libraries(eval_sdk tf ${OpenCV_LIBS})
