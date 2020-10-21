@@ -54,6 +54,9 @@ int main() {
     int prevIdentity = -1;
     int counter = 0;
 
+    // Create file for manifest file
+    std::ofstream manifestFile ("../binaryImages/manifest.txt", std::ofstream::binary);
+
     while(std::getline(infile, line)) {
         offset++;
         if(offset < 10000) {
@@ -111,6 +114,100 @@ int main() {
 
         outfile.write(reinterpret_cast<const char*>(imgRGB.data), 112 * 112 * 3);
         outfile.close();
+
+        manifestFile << filename;
+        manifestFile << "\n";
+    }
+
+    manifestFile.close();
+
+    for (size_t i = 0; i < collection.size() - 1; ++i) {
+        std::cout << "Running comparison: " << i << "/" << collection.size() << std::endl;
+        for (size_t j = i + 1; j < collection.size(); ++j) {
+            float similarity, matchProbability;
+            auto retCode = sdk.getSimilarity(collection[i].faceprint, collection[j].faceprint, matchProbability, similarity);
+            if (retCode != Trueface::ErrorCode::NO_ERROR) {
+                continue;
+                std::cout << "Unable to compute similarity" << std::endl;
+            }
+
+            int compType = 0;
+            if (collection[i].identity == collection[j].identity) {
+                compType = 1;
+                genuineScores.push_back(similarity);
+            } else {
+                impostorScores.push_back(similarity);
+                if (similarity > 0.5) {
+                    std::cout << similarity << std::endl;
+                    std::cout << collection[i].identity << std::endl;
+                    std::cout << collection[j].identity << std::endl;
+                    std::cout << std::endl;
+                }
+            }
+
+            scoresOut << compType << ',' << similarity << '\n';
+        }
+    }
+
+    std::cout << "Sorting vectors" << std::endl;
+    std::sort(impostorScores.begin(), impostorScores.end());
+    std::sort(genuineScores.begin(), genuineScores.end());
+
+    std::vector<float> FPR;
+    std::vector<float> FNR;
+
+    double threshold = 0.0;
+    const double increment = 0.001;
+    size_t i = 0;
+
+    std::cout << "Computing FPR" << std::endl;
+    while ( i < impostorScores.size()) {
+        if (impostorScores[i] > threshold) {
+            threshold += increment;
+            FPR.push_back((impostorScores.size() - static_cast<double>(i)) / impostorScores.size());
+        } else {
+            ++i;
+        }
+    }
+
+    while(threshold < 1 + increment) {
+        FPR.push_back(0);
+        threshold += increment;
+    }
+
+    threshold = 0.0;
+    i = 0;
+    std::cout << "Computing FNR" << std::endl;
+    while ( i < genuineScores.size()) {
+        if (genuineScores[i] > threshold) {
+            threshold += increment;
+            FNR.push_back((static_cast<double>(i)) / genuineScores.size());
+        } else {
+            ++i;
+        }
+    }
+
+    while(threshold < 1 + increment) {
+        FNR.push_back(0);
+        threshold += increment;
+    }
+
+    std::cout << FNR.size() << std::endl;
+    std::cout << FPR.size() << std::endl;
+
+
+    std::string FPRfilename = "mugshot_FPR_sdk.csv";
+    std::ofstream FPRfile(FPRfilename);
+
+    std::string FNRfilename = "mugshot_FNR_sdk.csv";
+    std::ofstream FNRfile(FNRfilename);
+
+    for (float idx : FPR) {
+        FPRfile << idx << '\n';
+    }
+
+    for (size_t idx = 0; idx < FNR.size(); ++idx) {
+        FNRfile << FNR[idx] << '\n';
     }
 
     return 0;
