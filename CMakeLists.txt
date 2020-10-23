@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 
 option(BUILD_IRYX "Build the eval script for IRYX" OFF)
-set(BUILD_IRYX ON)
+#set(BUILD_IRYX ON)
 
 if(BUILD_IRYX)
     set(CMAKE_SYSTEM_NAME Linux)

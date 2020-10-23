@@ -16,7 +16,7 @@ int main() {
     // --------------- Configuration parameters ---------------------
     const std::string parentDir = "/home/cyrus/work/data/mugshots/";
     const std::string descriptorFilename = "unique.txt";
-    const unsigned int numTemplates = 30;
+    const unsigned int numTemplates = 100;
     // --------------- Configuration parameters ---------------------
 
     Trueface::ConfigurationOptions options;
